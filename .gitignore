@@ -1,0 +1,7 @@
+node_modules
+.env
+
+# Grafana related
+lgtm
+
+database

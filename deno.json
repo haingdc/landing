@@ -1,0 +1,24 @@
+{
+  "imports": {
+    "@libsql/client": "npm:@libsql/client@^0.15.12",
+    "@opentelemetry/api": "npm:@opentelemetry/api@^1.9.0",
+    "hono": "jsr:@hono/hono@^4.9.2"
+  },
+  "tasks": {
+    "dev": "deno run --watch --allow-net main.ts",
+    "dev:otel": {
+      "dependencies": ["otel:docker"],
+      "description": "Start the application with OpenTelemetry enabled",
+      "command": "OTEL_DENO=true OTEL_SERVICE_NAME=Viet-300-words deno run --watch --allow-net --allow-env --env-file=envs/.env --allow-ffi main.ts"
+    },
+    "otel:docker": {
+      "description": "Setting up a Local Collector in Docker. Reference: https://docs.deno.com/examples/basic_opentelemetry_tutorial/#setting-up-a-local-collector",
+      "command": "docker-compose up -d"
+    }
+  },
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "hono/jsx"
+  }
+}

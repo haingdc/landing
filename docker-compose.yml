@@ -1,0 +1,20 @@
+services:
+  # LGTM Stack - All in one container (Loki, Grafana, Tempo, Mimir)
+  lgtm:
+    image: docker.io/grafana/otel-lgtm:0.8.1
+    ports:
+      - '3000:3000' # Grafana
+      - '4317:4317' # OTLP gRPC
+      - '4318:4318' # OTLP HTTP
+    volumes:
+      - ./lgtm/grafana:/data/grafana
+      - ./lgtm/prometheus:/data/prometheus
+      - ./lgtm/loki:/data/loki
+    environment:
+      - GF_PATHS_DATA=/data/grafana
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
