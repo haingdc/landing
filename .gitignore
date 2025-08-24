@@ -1,7 +1,8 @@
 node_modules
 .env
+lib.deno.d.ts
 
 # Grafana related
 lgtm
 
-database
+database/development

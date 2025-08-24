@@ -5,20 +5,35 @@
     "hono": "jsr:@hono/hono@^4.9.2"
   },
   "tasks": {
-    "dev": "deno run --watch --allow-net main.ts",
     "dev:otel": {
       "dependencies": ["otel:docker"],
       "description": "Start the application with OpenTelemetry enabled",
-      "command": "OTEL_DENO=true OTEL_SERVICE_NAME=Viet-300-words deno run --watch --allow-net --allow-env --env-file=envs/.env --allow-ffi main.ts"
+      "command": "OTEL_DENO=true OTEL_SERVICE_NAME=Viet-300-words deno run --watch --allow-net --allow-env --env-file=envs/.env --allow-ffi --allow-read main.ts"
     },
     "otel:docker": {
       "description": "Setting up a Local Collector in Docker. Reference: https://docs.deno.com/examples/basic_opentelemetry_tutorial/#setting-up-a-local-collector",
-      "command": "docker-compose up -d"
+      "command": "docker-compose up -d",
+      "dependencies": ["docker:open-if-any"]
+    },
+    "docker:open-if-any": {
+      "description": "Mở Docker vì đó là bắt buộc để sử dụng OpenTelemetry",
+      "command": "sh ./open-docker-if-any.sh"
+    },
+    "types": {
+      "description": "giải quyết lỗi Deno is not found",
+      "command": "deno types > lib.deno.d.ts"
+    },
+    "test": {
+      "description": "Run tests (Hiện tại chưa thể setup test thành công)",
+      "command": "APP_ENV=test deno test --allow-all --env-file=envs/.env --no-check"
     }
   },
   "nodeModulesDir": "auto",
   "compilerOptions": {
+    "strict": true,
     "jsx": "precompile",
-    "jsxImportSource": "hono/jsx"
-  }
+    "jsxImportSource": "hono/jsx",
+    "lib": ["deno.worker", "esnext"]
+  },
+  "unstable": ["raw-imports", "temporal"]
 }
