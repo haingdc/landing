@@ -66,7 +66,7 @@ app.get("/", async (c) => {
 
 app.get("/api/dayrecord", async (c) => {
   const query = c.req.query("listType");
-  const today = Temporal.Now.plainDateISO();
+  const today = Temporal.Now.plainDateISO('Asia/Ho_Chi_Minh');
   const currentDay = today.dayOfWeek; // 1 = Monday, ..., 7 = Sunday
   const mondayOffset = currentDay === 7 ? -6 : 1 - currentDay; // If Sunday, go back 6 days, else calculate days until Monday
 
@@ -89,7 +89,7 @@ app.get("/api/dayrecord", async (c) => {
       args: [startDayStr, endDayStr],
     });
     return c.json(rs.rows);
-  } catch (err) {
+  } catch (_err) {
     return c.text("Internal Server Error", 500);
   }
 });
