@@ -15,6 +15,7 @@ try {
   const response = await fetch(`./api/dayrecord?${params.toString()}`)
   const dayRecords = await response.json()
   const newData = [null,null,null,null,null, null,null] // 7 days a week
+  let today = Temporal.Now.plainDateISO('Asia/Ho_Chi_Minh');
   for (let i = 0; i < dayRecords.length && i < 7; i++) {
     const d = dayRecords[i]
     const { dayOfWeek } = Temporal.PlainDate.from(d.date)
@@ -38,7 +39,8 @@ try {
         w: 400,
         h: 400,
         prompt: 0,
-        header: weekdays[i]
+        header: weekdays[i],
+        ratioDailyTarget: today.dayOfWeek === i + 1 ? 0 : undefined
       }
     }
   }

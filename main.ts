@@ -82,12 +82,14 @@ app.get("/api/dayrecord", async (c) => {
   const startDayStr = startDay.toString(); // YYYY-MM-DD format
   const endDayStr = endDay.toString(); // YYYY-MM-DD format
 
+  console.log('Fetching records from', startDayStr, 'to', endDayStr);
   try {
     const rs = await db.execute({
       sql:
         "SELECT * FROM DailyProgress WHERE date >= ? AND date <= ? ORDER BY date ASC",
       args: [startDayStr, endDayStr],
     });
+    console.log("Fetched rows:", rs.rows);
     return c.json(rs.rows);
   } catch (_err) {
     return c.text("Internal Server Error", 500);
