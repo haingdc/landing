@@ -2,7 +2,8 @@
   "imports": {
     "@libsql/client": "npm:@libsql/client@^0.15.14",
     "@opentelemetry/api": "npm:@opentelemetry/api@^1.9.0",
-    "hono": "jsr:@hono/hono@^4.9.4"
+    "hono": "jsr:@hono/hono@^4.9.4",
+    "libsql": "npm:libsql@0.5.17"
   },
   "tasks": {
     "dev:otel": {

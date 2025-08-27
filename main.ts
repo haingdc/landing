@@ -1,9 +1,8 @@
 import { Hono } from "hono";
 import { metrics } from "npm:@opentelemetry/api@1";
 import { trimTrailingSlash } from "hono/trailing-slash";
-import { createClient } from "@libsql/client";
 import { serveStatic } from "hono/deno";
-import { type Client } from "@libsql/client";
+import { createClient, type Client } from "@libsql/client";
 
 const meter = metrics.getMeter("Viet-300-words", "1.0.0");
 // Create some metrics
