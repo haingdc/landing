@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { metrics } from "npm:@opentelemetry/api@1";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import { serveStatic } from "hono/deno";
-import { createClient, type Client } from "@libsql/client";
+import { createClient, type Client } from "https://esm.sh/@libsql/client@0.6.0/web";
+
 
 const meter = metrics.getMeter("Viet-300-words", "1.0.0");
 // Create some metrics
@@ -13,11 +14,9 @@ const requestCounter = meter.createCounter("http_requests_total", {
 let db: Client;
 try {
   db = createClient({
-    url: Deno.env.get("TURSO_URL")!,
-    syncUrl: Deno.env.get("TURSO_SYNC_URL"),
+    url: Deno.env.get("TURSO_SYNC_URL")!,
     authToken: Deno.env.get("TURSO_AUTH_TOKEN"),
-    syncInterval: Number(Deno.env.get("TURSO_SYNC_INTERVAL") || 3) ,
-  });
+  })
 } catch (err) {
   console.log("DB init error", err);
   Deno.exit(1);
@@ -64,21 +63,9 @@ app.get("/api/dayrecord", async (c) => {
         "SELECT * FROM DailyProgress WHERE date >= ? AND date <= ? ORDER BY date ASC",
       args: [startDayStr, endDayStr],
     });
-    console.log("Fetched rows:", rs.rows);
-    const rsCount = await db.execute({ sql: "SELECT COUNT(*) FROM DailyProgress", args: [] })
-    console.log("Total count of records:", rsCount.rows);
     return c.json(rs.rows);
   } catch (_err) {
-    return c.text("Internal Server Error", 500);
-  }
-});
-
-app.get("/sync", async (c) => {
-  try {
-    await db.sync();
-    return c.json({ status: "success" });
-  } catch (err) {
-    console.log("sync error", err);
+    console.log("DB error", _err);
     return c.text("Internal Server Error", 500);
   }
 });

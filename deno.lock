@@ -5,6 +5,7 @@
     "npm:@libsql/client@~0.15.14": "0.15.14",
     "npm:@opentelemetry/api@1": "1.9.0",
     "npm:@opentelemetry/api@^1.9.0": "1.9.0",
+    "npm:@tursodatabase/serverless@~0.1.3": "0.1.3",
     "npm:@types/node@*": "24.2.0",
     "npm:libsql@0.5.17": "0.5.17"
   },
@@ -145,6 +146,9 @@
     "@opentelemetry/api@1.9.0": {
       "integrity": "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="
     },
+    "@tursodatabase/serverless@0.1.3": {
+      "integrity": "sha512-S30LgeIgUo2voGLI6F5sNjCZRBd/oUtneZi9zOry1jPZqeZVLJBHWXWyKkuW2/hLnbLT1AVIrenZ4yQav2+nZg=="
+    },
     "@types/node@24.2.0": {
       "integrity": "sha512-3xyG3pMCq3oYCNg7/ZP+E1ooTaGB4cG8JWRsqqOYQdbWNY4zbaV0Ennrd7stjiJEFZCaybcIgpTjJWHRfBSIDw==",
       "dependencies": [
@@ -244,11 +248,47 @@
       "integrity": "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="
     }
   },
+  "redirects": {
+    "https://esm.sh/@libsql/core@^0.6.0/api?target=denonext": "https://esm.sh/@libsql/core@0.6.2/api?target=denonext",
+    "https://esm.sh/@libsql/core@^0.6.0/config?target=denonext": "https://esm.sh/@libsql/core@0.6.2/config?target=denonext",
+    "https://esm.sh/@libsql/core@^0.6.0/uri?target=denonext": "https://esm.sh/@libsql/core@0.6.2/uri?target=denonext",
+    "https://esm.sh/@libsql/core@^0.6.0/util?target=denonext": "https://esm.sh/@libsql/core@0.6.2/util?target=denonext",
+    "https://esm.sh/@libsql/hrana-client@^0.6.0?target=denonext": "https://esm.sh/@libsql/hrana-client@0.6.2?target=denonext",
+    "https://esm.sh/@libsql/isomorphic-fetch@^0.2.1?target=denonext": "https://esm.sh/@libsql/isomorphic-fetch@0.2.5?target=denonext",
+    "https://esm.sh/@libsql/isomorphic-ws@^0.1.5?target=denonext": "https://esm.sh/@libsql/isomorphic-ws@0.1.5?target=denonext",
+    "https://esm.sh/@types/ws@~8.5.13/index.d.mts": "https://esm.sh/@types/ws@8.5.14/index.d.mts",
+    "https://esm.sh/js-base64@^3.7.5?target=denonext": "https://esm.sh/js-base64@3.7.8?target=denonext"
+  },
+  "remote": {
+    "https://esm.sh/@libsql/client@0.6.0/denonext/http.mjs": "148037581e5bb18e1b4d538611ca902103b9d05dfb331a3b1e615102a6d4204c",
+    "https://esm.sh/@libsql/client@0.6.0/denonext/lib-esm/hrana.mjs": "7de504e4bfb97232286984b7b2df280a8a22d6b0a95c6fa2bf0dc8300963cfb9",
+    "https://esm.sh/@libsql/client@0.6.0/denonext/lib-esm/sql_cache.mjs": "60c67baa99a6c37b73a96c1b66bb93295460f1eb89197befe7957e5441cb0046",
+    "https://esm.sh/@libsql/client@0.6.0/denonext/web.mjs": "753c925c0c42839e5dc6cd9545d3857f235cc86d61d202b2fcc4f769c24d3af2",
+    "https://esm.sh/@libsql/client@0.6.0/denonext/ws.mjs": "77353749d561df39bdd259fd61662859683139b527db150b501c77ff633948fa",
+    "https://esm.sh/@libsql/client@0.6.0/web": "1b94d6f16284ebc3a7424499a5db8f5d01ae04403847a4cf3d2b6c2f18d2ffaa",
+    "https://esm.sh/@libsql/core@0.6.2/api?target=denonext": "822c5ca0d275c77eada3263848d3671a015eb04cbdbd49ef3a6da53e2c5a3966",
+    "https://esm.sh/@libsql/core@0.6.2/config?target=denonext": "e804f2d6faec42aeb9d8d01444acfa61ccd6a110082a18b38954ee72bc57b555",
+    "https://esm.sh/@libsql/core@0.6.2/denonext/api.mjs": "4666c2f1616b4f726cad8693de709f5ce9ee5c54403faca6afc638af71226393",
+    "https://esm.sh/@libsql/core@0.6.2/denonext/config.mjs": "1a81494c5a1f2bd3a4ad0e342e39a726dec2215d004396be8b4ae12368231544",
+    "https://esm.sh/@libsql/core@0.6.2/denonext/uri.mjs": "ff5528490e7495c51111b336ecf8ec253e05e999e59cd09332c8e34b05c59963",
+    "https://esm.sh/@libsql/core@0.6.2/denonext/util.mjs": "5bec6660d3c9d3239e1a71c542368d6a8bea3c230c504b4a7e279f797e73c737",
+    "https://esm.sh/@libsql/core@0.6.2/uri?target=denonext": "8e98eeca38a501f9b54e78db24b9fcec5d6e2d3e6cf6b62ad43bc00304998993",
+    "https://esm.sh/@libsql/core@0.6.2/util?target=denonext": "921b1c575afc0471937fc9bc2bd0d114e8dba324b6dc863c82ae1a694af0052d",
+    "https://esm.sh/@libsql/hrana-client@0.6.2/denonext/hrana-client.mjs": "745551ed76a95591f6ae08d2b4a3bf7384be99b21580f66270d3cdede1ba2447",
+    "https://esm.sh/@libsql/hrana-client@0.6.2?target=denonext": "4c32b73eb71515d731ac4169b3e951cd41402ccbb4c33e42fc55ab9aafafe4e5",
+    "https://esm.sh/@libsql/isomorphic-fetch@0.2.5/denonext/isomorphic-fetch.mjs": "e5c81d082ca4319b8f8e40644bcf60e9f47e3a9615b8e25fc0fa757d90ec4d61",
+    "https://esm.sh/@libsql/isomorphic-fetch@0.2.5?target=denonext": "e52f931ee2fa28e03406ca26a7c47b75cf6731fb81fa41b4ed72910ee65c8e3b",
+    "https://esm.sh/@libsql/isomorphic-ws@0.1.5/denonext/isomorphic-ws.mjs": "9d104b6fe80cb913bd8b09e76a6e7e83e5d7537bd7dbf1d593da5842888cd2b2",
+    "https://esm.sh/@libsql/isomorphic-ws@0.1.5?target=denonext": "0d1a1aa981e92234677ee9b98e72d31125bde45d08cb653917dd2c5144001c9a",
+    "https://esm.sh/js-base64@3.7.8/denonext/js-base64.mjs": "ccf0b96c1ebd19736340ad9465fe131b89f6d4600266c1d1c865b09e2552f20b",
+    "https://esm.sh/js-base64@3.7.8?target=denonext": "370dcd4bb3446e481af0844569a77f475f1580794f4fdf034f5d89a9cb6f7c9f"
+  },
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@^4.9.4",
       "npm:@libsql/client@~0.15.14",
       "npm:@opentelemetry/api@^1.9.0",
+      "npm:@tursodatabase/serverless@~0.1.3",
       "npm:libsql@0.5.17"
     ]
   }
