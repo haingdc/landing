@@ -49,6 +49,9 @@ app.get("/api/dayrecord", async (c) => {
   if (query === "next_week") {
     startDay = today.add({ days: mondayOffset + 7 });
     endDay = startDay.add({ days: 6 });
+  } else if (query === "last_week") {
+    startDay = today.add({ days: mondayOffset - 7 });
+    endDay = startDay.add({ days: 6 });
   } else {
     startDay = today.add({ days: mondayOffset });
     endDay = startDay.add({ days: 6 });

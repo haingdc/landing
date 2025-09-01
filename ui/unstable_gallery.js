@@ -1,4 +1,5 @@
 /// <reference lib="dom" />
+import getColor from '../scripts/getColor.js'
 
 // === generic scheduler & its debugger
 let scheduledRender = false
@@ -390,10 +391,8 @@ function render(now) {
         // if (!stillAnimating && img.src !== src) img.src = src // load the full res image
         chiThiMau.style.width = chiThiMau.style.height = `${chiThiMauSize}px`
         chiThiMau.style.left = `${(d.sizeX.pos - chiThiMauSize) / 2}px`
-        chiThiMau.style.background = d.ratioDailyTarget >= 100 ? 'hsl(124.97deg 65.15% 52.75%)'
-          : d.ratioDailyTarget > 90 ? 'hsl(30.5, 89.6%, 58.6%)'
-          : d.ratioDailyTarget > 66 ? 'hsl(55.8, 88.5%, 59.2%)'
-          : 'hsl(1.5, 78%, 59%)'
+        let { light, saturation, hue } = getColor(d.ratioDailyTarget);
+        chiThiMau.style.background = `hsl(${hue}deg ${saturation}% ${light}%)`;
       } else {
         node.style.zIndex = i + 1 // simple proper z-index management
         prompt.style.overflowY = 'hidden'
@@ -403,10 +402,8 @@ function render(now) {
         chiThiMau.style.width = chiThiMau.style.height = `${chiThiMauSize}px`
         chiThiMau.style.left = `${(d.sizeX.pos - chiThiMauSize) / 2}px`
         chiThiMau.style.top = `${(d.sizeY.pos - chiThiMauSize) / 2}px`
-        chiThiMau.style.background = d.ratioDailyTarget >= 100 ? 'hsl(124.97deg 65.15% 52.75%)'
-          : d.ratioDailyTarget > 90 ? 'hsl(30.5, 89.6%, 58.6%)'
-          : d.ratioDailyTarget > 66 ? 'hsl(55.8, 88.5%, 59.2%)'
-          : 'hsl(1.5, 78%, 59%)'
+        let { light, saturation, hue } = getColor(d.ratioDailyTarget);
+        chiThiMau.style.background = `hsl(${hue}deg ${saturation}% ${light}%)`;
       }
       if (node.parentNode == null) document.body.appendChild(node) // if previously absent, add
     } else if (node.parentNode != null) document.body.removeChild(node) // if previously present, remove
