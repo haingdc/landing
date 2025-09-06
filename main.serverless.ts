@@ -4,7 +4,6 @@ import { trimTrailingSlash } from "hono/trailing-slash";
 import { serveStatic } from "hono/deno";
 import { createClient, type Client } from "https://esm.sh/@libsql/client@0.6.0/web";
 
-
 const meter = metrics.getMeter("Viet-300-words", "1.0.0");
 // Create some metrics
 const requestCounter = meter.createCounter("http_requests_total", {
@@ -69,5 +68,62 @@ app.get("/api/dayrecord", async (c) => {
     return c.text("Internal Server Error", 500);
   }
 });
+
+app.get("/api/weeklyprogress", async (c) => {
+  try {
+    const rs = await db.execute({
+      sql: `
+      WITH per_day AS (
+        -- 1 dòng = 1 ngày (gom tất cả note/record trong cùng 1 ngày)
+        SELECT
+          date(dr.date) AS d,
+          SUM(COALESCE(dwc.added_words_count,0) - COALESCE(dwc.removed_words_count,0)) AS net_words
+        FROM DayRecord dr
+        LEFT JOIN DayWordsCount dwc ON dwc.id = dr.id
+        GROUP BY date(dr.date)
+      ),
+
+      per_day_with_week AS (
+        -- tính week_start (Thứ Hai) từ d
+        SELECT
+          d,
+          net_words,
+          ((CAST(strftime('%w', d) AS INTEGER) + 6) % 7) AS offset_from_monday,
+          date(d, '-' || ((CAST(strftime('%w', d) AS INTEGER) + 6) % 7) || ' days') AS week_start
+        FROM per_day
+      ),
+
+      weekly AS (
+        SELECT
+          week_start,
+          date(week_start, '+6 days') AS week_end,
+          SUM(net_words) AS total_net_words,
+          COUNT(*) AS writing_days, -- số ngày có viết trong tuần
+          GROUP_CONCAT(d) AS days_list
+        FROM per_day_with_week
+        GROUP BY week_start
+      )
+
+      SELECT
+        week_start,
+        week_end,
+        total_net_words AS total_net_words_a_week,
+        CASE
+          WHEN writing_days > 0 THEN ROUND(total_net_words * 1.0 / writing_days, 0)
+          ELSE 0
+        END AS avg_daily_net_words_a_week_so_far,
+        writing_days AS writing_days,  -- chỉ số ngày viết, không kèm /7
+        days_list
+      FROM weekly
+      ORDER BY week_start;
+      `,
+      args: [],
+    });
+    return c.json(rs.rows);
+  } catch (error) {
+    console.log("weeklyprogress error", error);
+    return c.text("Internal Server Error", 500);
+  }
+})
 
 Deno.serve(app.fetch);
