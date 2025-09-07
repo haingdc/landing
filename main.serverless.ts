@@ -3,6 +3,7 @@ import { metrics } from "npm:@opentelemetry/api@1";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import { serveStatic } from "hono/deno";
 import { createClient, type Client } from "https://esm.sh/@libsql/client@0.6.0/web";
+import { getTime, md5 } from "./server/util.ts";
 
 const meter = metrics.getMeter("Viet-300-words", "1.0.0");
 // Create some metrics
@@ -23,6 +24,43 @@ try {
 
 const app = new Hono({ strict: true });
 app.use(trimTrailingSlash());
+
+// Handle chart.html with ETag caching
+app.get('/chart.html', async (c) => {
+  try {
+    const now = new Date();
+    const etag = md5(getTime(now));
+    
+    // Check if client sent If-None-Match header
+    const ifNoneMatch = c.req.header('if-none-match'); // Changed to lowercase
+    
+    const clientEtag = ifNoneMatch?.replace(/^W\//, ''); // Handle both weak and strong validators
+    
+    console.log('-----------------')
+        console.log('Serving chart.html at', now.toISOString());
+    console.log('compare: ifNoneMatch vs with etag:', clientEtag === etag)
+    console.log('if-none-match:', ifNoneMatch);
+    console.log('with etag:', etag);
+    if (clientEtag === etag) {
+      console.log('ETag matches, returning 304');
+      return new Response(null, { status: 304 });
+    }
+    
+    // ETag does not match, sending full response
+    const content = await Deno.readFile('./public/chart.html');
+    return new Response(content, {
+      headers: {
+        'content-type': 'text/html',
+        etag,
+        // "cache-control": "public, max-age=0, must-revalidate",
+        "cache-control": "max-age=604800" // 7 days
+      }
+    });
+  } catch (error) {
+    console.error('Error serving chart.html:', error);
+    return c.text('Internal Server Error', 500);
+  }
+});
 
 app.use("/*", serveStatic({ root: "./public" }));
 
