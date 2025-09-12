@@ -281,7 +281,7 @@
       const weeklyProgressPromise = fetch(`./api/weeklyprogress`)
       const response = await weeklyProgressPromise
       const weeklyProgress = await response.json()
-      const headers = ['Tuần', 'Số lượng từ', 'avg/ngày', 'số lượng ngày viết trong tuần']
+      const headers = ['Tuần', 'Số lượng từ', 'Avg/ngày', 'Số lượng ngày viết trong tuần']
 
       const table = document.createElement('table');
       table.classList.add('weekly-progress-table')
