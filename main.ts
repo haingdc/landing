@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { metrics } from "npm:@opentelemetry/api@1"
+import { metrics } from "@opentelemetry/api"
 import { trimTrailingSlash } from "hono/trailing-slash"
 import { serveStatic } from "hono/deno"
 import { createClient, type Client } from "@libsql/client"
@@ -162,7 +162,7 @@ app.get("/api/weeklyprogress", async (c) => {
         writing_days AS writing_days,  -- chỉ số ngày viết, không kèm /7
         days_list
       FROM weekly
-      ORDER BY week_start;
+      ORDER BY week_start DESC;
       `,
       args: [],
     });
