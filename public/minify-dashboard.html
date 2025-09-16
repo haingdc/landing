@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Minification Dashboard</title>
+    <script type="importmap">
+        {
+            "imports": {
+                "d3": "https://cdn.jsdelivr.net/npm/d3@7/+esm"
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+        }
+
+        .stat-value.blue { color: #3b82f6; }
+        .stat-value.green { color: #10b981; }
+        .stat-value.purple { color: #8b5cf6; }
+        .stat-value.red { color: #ef4444; }
+
+        .chart-container {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .chart-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .chart-content {
+            padding: 1.5rem;
+        }
+
+        #comparison-chart {
+            width: 100%;
+            height: 400px;
+        }
+
+        #treemap-chart {
+            width: 100%;
+            height: 500px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        td {
+            font-size: 0.875rem;
+        }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .badge.danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .bar {
+            transition: opacity 0.2s;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .treemap-node {
+            stroke: #fff;
+            stroke-width: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .treemap-node:hover {
+            stroke-width: 3px;
+        }
+
+        .treemap-text {
+            font-size: 12px;
+            fill: white;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .treemap-subtext {
+            font-size: 10px;
+            fill: rgba(255,255,255,0.8);
+        }
+
+        .input-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            min-height: 420px;
+        }
+
+        button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JavaScript Minification Analysis Dashboard</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="json-input">Dữ liệu JSON (có thể paste dữ liệu mới hoặc sử dụng dữ liệu mẫu):</label>
+                    <textarea id="json-input" placeholder='Paste JSON data here...'></textarea>
+                    <div id="error-message" class="error-message" style="display: none;"></div>
+                </div>
+                <button onclick="updateData()">Cập nhật dữ liệu</button>
+            </div>
+        </div>
+
+        <div id="dashboard-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Tổng dung lượng gốc</div>
+                    <div class="stat-value blue" id="total-original">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tổng sau minify</div>
+                    <div class="stat-value green" id="total-minified">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tiết kiệm được</div>
+                    <div class="stat-value purple" id="total-savings">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tỷ lệ giảm</div>
+                    <div class="stat-value red" id="total-percentage">-</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2 class="chart-title">So sánh kích thước file </h2>
+                </div>
+                <div class="chart-content">
+                    <div id="comparison-chart"></div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2 class="chart-title">Chi tiết thay đổi</h2>
+                </div>
+                <div class="chart-content">
+                    <div class="table-container">
+                        <table id="details-table">
+                            <thead>
+                                <tr>
+                                    <th>Tên file</th>
+                                    <th class="text-right">Kích thước gốc</th>
+                                    <th class="text-right">Sau minify</th>
+                                    <th class="text-right">Tiết kiệm</th>
+                                    <th class="text-right">% Giảm</th>
+                                    <th class="text-center">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2 class="chart-title">Treemap</h2>
+                </div>
+                <div class="chart-content">
+                    <div id="treemap-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script type="module">
+        import * as d3 from 'd3';
+
+        // Sample data
+        const sampleData = {
+            "files": [
+                {
+                    "file_path": "./public/scripts/getColor.js",
+                    "file_size": 592
+                },
+                {
+                    "file_path": "./public/scripts/unstable_spinDelay.js",
+                    "file_size": 1558
+                },
+                {
+                    "file_path": "./public/scripts/delay.js",
+                    "file_size": 2198
+                },
+                {
+                    "file_path": "./public/scripts/unstable_formatDateRanges.js",
+                    "file_size": 2207
+                },
+                {
+                    "file_path": "./dist/scripts/getColor.min.js",
+                    "file_size": 284
+                },
+                {
+                    "file_path": "./dist/scripts/unstable_spinDelay.min.js",
+                    "file_size": 2080
+                },
+                {
+                    "file_path": "./dist/scripts/delay.min.js",
+                    "file_size": 678
+                },
+                {
+                    "file_path": "./dist/scripts/unstable_formatDateRanges.min.js",
+                    "file_size": 720
+                }
+            ]
+        };
+
+        let currentData = sampleData;
+
+        // Initialize with sample data
+        document.getElementById('json-input').value = JSON.stringify(sampleData, null, 2);
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            return `${(bytes / 1024).toFixed(1)} KB`;
+        }
+
+        function processData(rawData) {
+            const originalFiles = rawData.files.filter(file => !file.file_path.includes('.min.js'));
+            const minifiedFiles = rawData.files.filter(file => file.file_path.includes('.min.js'));
+            
+            return originalFiles.map(original => {
+                const fileName = original.file_path.split('/').pop().replace('.js', '');
+                const minified = minifiedFiles.find(min => 
+                    min.file_path.includes(fileName + '.min.js')
+                );
+                
+                if (minified) {
+                    const reduction = original.file_size - minified.file_size;
+                    const reductionPercentage = ((reduction / original.file_size) * 100);
+                    
+                    return {
+                        name: fileName,
+                        original: original.file_size,
+                        minified: minified.file_size,
+                        reduction: reduction,
+                        reductionPercentage: reductionPercentage,
+                        savings: Math.max(0, reduction)
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+
+        function updateStats(processedData) {
+            const totalOriginal = processedData.reduce((sum, item) => sum + item.original, 0);
+            const totalMinified = processedData.reduce((sum, item) => sum + item.minified, 0);
+            const totalSavings = totalOriginal - totalMinified;
+            const totalSavingsPercentage = totalOriginal > 0 ? ((totalSavings / totalOriginal) * 100) : 0;
+
+            document.getElementById('total-original').textContent = formatSize(totalOriginal);
+            document.getElementById('total-minified').textContent = formatSize(totalMinified);
+            document.getElementById('total-savings').textContent = formatSize(totalSavings);
+            document.getElementById('total-percentage').textContent = `${totalSavingsPercentage.toFixed(1)}%`;
+        }
+
+        function createHorizontalBarChart(data) {
+            const container = d3.select('#comparison-chart');
+            container.selectAll('*').remove();
+
+            const margin = { top: 20, right: 80, bottom: 60, left: 150 };
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = Math.max(400, data.length * 60) - margin.top - margin.bottom;
+
+            const svg = container
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom);
+
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const xScale = d3.scaleLinear()
+                .domain([0, d3.max(data, d => Math.max(d.original, d.minified))])
+                .range([0, width]);
+
+            const yScale = d3.scaleBand()
+                .domain(data.map(d => d.name))
+                .range([0, height])
+                .padding(0.3);
+
+            const colors = {
+                original: '#3b82f6',
+                minified: '#10b981'
+            };
+
+            // Create bars for original files
+            g.selectAll('.bar-original')
+                .data(data)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar bar-original')
+                .attr('x', 0)
+                .attr('y', d => yScale(d.name))
+                .attr('width', d => xScale(d.original))
+                .attr('height', yScale.bandwidth() / 2)
+                .attr('fill', colors.original)
+                .on('mouseover', function(event, d) {
+                    showTooltip(event, `${d.name} (Gốc): ${formatSize(d.original)}`);
+                })
+                .on('mouseout', hideTooltip);
+
+            // Create bars for minified files
+            g.selectAll('.bar-minified')
+                .data(data)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar bar-minified')
+                .attr('x', 0)
+                .attr('y', d => yScale(d.name) + yScale.bandwidth() / 2)
+                .attr('width', d => xScale(d.minified))
+                .attr('height', yScale.bandwidth() / 2)
+                .attr('fill', colors.minified)
+                .on('mouseover', function(event, d) {
+                    showTooltip(event, `${d.name} (Minified): ${formatSize(d.minified)}`);
+                })
+                .on('mouseout', hideTooltip);
+
+            // X axis
+            g.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(xScale).tickFormat(formatSize));
+
+            // X axis label
+            g.append('text')
+                .attr('x', width + 50)
+                .attr('y', height)  // Cùng hàng với trục X
+                .attr('dy', '0.32em')  // Điều chỉnh để căn giữa theo chiều dọc
+                .attr('text-anchor', 'middle')
+                .style('font-size', '14px')
+                .style('font-weight', '600')
+                .text('Size');
+
+            // Y axis
+            g.append('g')
+                .call(d3.axisLeft(yScale));
+
+            // Y axis label
+            g.append('text')
+                .attr('x', -10)
+                .attr('y', -10)
+                .attr('text-anchor', 'end')
+                .style('font-size', '14px')
+                .style('font-weight', '600')
+                .text('File');
+
+            // Legend
+            const legend = g.append('g')
+                .attr('transform', `translate(${width - 100}, 20)`);
+
+            const legendData = [
+                { label: 'File gốc', color: colors.original },
+                { label: 'File minified', color: colors.minified }
+            ];
+
+            const legendItems = legend.selectAll('.legend-item')
+                .data(legendData)
+                .enter()
+                .append('g')
+                .attr('class', 'legend-item')
+                .attr('transform', (d, i) => `translate(0, ${i * 25})`);
+
+            legendItems.append('rect')
+                .attr('width', 18)
+                .attr('height', 18)
+                .attr('fill', d => d.color);
+
+            legendItems.append('text')
+                .attr('x', 25)
+                .attr('y', 9)
+                .attr('dy', '0.35em')
+                .style('font-size', '14px')
+                .text(d => d.label);
+        }
+
+        function createTreemap(data) {
+            const container = d3.select('#treemap-chart');
+            container.selectAll('*').remove();
+
+            const width = container.node().getBoundingClientRect().width;
+            const height = 500;
+
+            const svg = container
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // Use all data, with absolute value of reduction or original size for sizing
+            const treeData = data.map(d => ({
+                name: d.name,
+                // Sử dụng original size khi reduction = 0 để đảm bảo file vẫn được hiển thị
+                absoluteValue: Math.abs(d.reduction) || d.original,
+                reduction: d.reduction,
+                original: d.original,
+                minified: d.minified
+            }));
+            
+            if (treeData.length === 0) {
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height / 2)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '18px')
+                    .style('fill', '#64748b')
+                    .text('Không có dữ liệu để hiển thị');
+                return;
+            }
+
+            const root = d3.hierarchy({ children: treeData })
+                .sum(d => d.absoluteValue);
+
+            const treemap = d3.treemap()
+                .size([width, height])
+                .padding(2);
+
+            treemap(root);
+
+            const colorScale = d3.scaleOrdinal()
+                .domain(data.map(d => d.name))
+                .range(d3.schemeCategory10);
+
+            const nodes = svg.selectAll('.treemap-node')
+                .data(root.leaves())
+                .enter()
+                .append('g')
+                .attr('class', 'treemap-node-group')
+                .attr('transform', d => `translate(${d.x0},${d.y0})`);
+
+            nodes.append('rect')
+                .attr('class', 'treemap-node')
+                .attr('width', d => d.x1 - d.x0)
+                .attr('height', d => d.y1 - d.y0)
+                .attr('fill', d => colorScale(d.data.name))
+                .on('mouseover', function(event, d) {
+                    const percentage = ((d.data.reduction / d.data.original) * 100).toFixed(1);
+                    let changeText, sign, color;
+                    
+                    if (d.data.reduction > 0) {
+                        changeText = 'Tiết kiệm';
+                        sign = '-';
+                        color = '#10b981'; // xanh lá cho giảm
+                    } else if (d.data.reduction < 0) {
+                        changeText = 'Tăng';
+                        sign = '+';
+                        color = '#ef4444'; // đỏ cho tăng
+                    } else {
+                        changeText = 'Không đổi';
+                        sign = '';
+                        color = '#64748b'; // xám cho không đổi
+                    }
+                    
+                    showTooltip(event, `${d.data.name}<br/>${changeText}: <span style="color: ${color}">${sign}${formatSize(Math.abs(d.data.reduction))}</span><br/>Tỷ lệ: <span style="color: ${color}">${sign}${Math.abs(percentage)}%</span>`);
+                })
+                .on('mouseout', hideTooltip);
+
+            nodes.append('text')
+                .attr('class', 'treemap-text')
+                .attr('x', d => (d.x1 - d.x0) / 2)
+                .attr('y', d => (d.y1 - d.y0) / 2 - 8)
+                .text(d => {
+                    const width = d.x1 - d.x0;
+                    const height = d.y1 - d.y0;
+                    if (width > 80 && height > 40) {
+                        return d.data.name;
+                    }
+                    return '';
+                });
+
+            nodes.append('text')
+                .attr('class', 'treemap-text treemap-subtext')
+                .attr('x', d => (d.x1 - d.x0) / 2)
+                .attr('y', d => (d.y1 - d.y0) / 2 + 8)
+                .text(d => {
+                    const width = d.x1 - d.x0;
+                    const height = d.y1 - d.y0;
+                    if (width > 100 && height > 60) {
+                        const sign = d.data.reduction > 0 ? '-' : '+';
+                        return `${sign}${formatSize(Math.abs(d.data.reduction))}`;
+                    }
+                    return '';
+                });
+        }
+
+        function updateTable(data) {
+            const tbody = document.querySelector('#details-table tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                
+                const savings = item.reduction > 0 ? `-${formatSize(item.reduction)}` : `+${formatSize(Math.abs(item.reduction))}`;
+                const percentage = item.reductionPercentage > 0 ? `-${Math.abs(item.reductionPercentage).toFixed(1)}%` : `+${Math.abs(item.reductionPercentage).toFixed(1)}%`;
+                const statusClass = item.reduction > 0 ? 'success' : 'danger';
+                const statusText = item.reduction > 0 ? 'Giảm' : 'Tăng';
+
+                row.innerHTML = `
+                    <td style="font-weight: 500;">${item.name}</td>
+                    <td class="text-right">${formatSize(item.original)}</td>
+                    <td class="text-right">${formatSize(item.minified)}</td>
+                    <td class="text-right" style="color: ${item.reduction > 0 ? '#10b981' : '#ef4444'}; font-weight: 500;">
+                        ${savings}
+                    </td>
+                    <td class="text-right" style="color: ${item.reductionPercentage > 0 ? '#10b981' : '#ef4444'}; font-weight: 500;">
+                        ${percentage}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge ${statusClass}">${statusText}</span>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function showTooltip(event, text) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = text;
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+            tooltip.style.opacity = '1';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.opacity = '0';
+        }
+
+        function renderDashboard(data) {
+            const processedData = processData(data);
+            
+            updateStats(processedData);
+            createHorizontalBarChart(processedData);
+            createTreemap(processedData);
+            updateTable(processedData);
+        }
+
+        window.updateData = function() {
+            const input = document.getElementById('json-input');
+            const errorMessage = document.getElementById('error-message');
+            
+            try {
+                const newData = JSON.parse(input.value);
+                
+                // Validate data structure
+                if (!newData.files || !Array.isArray(newData.files)) {
+                    throw new Error('Dữ liệu phải chứa thuộc tính "files" là một mảng');
+                }
+                
+                currentData = newData;
+                renderDashboard(currentData);
+                errorMessage.style.display = 'none';
+            } catch (error) {
+                errorMessage.textContent = `Lỗi JSON: ${error.message}`;
+                errorMessage.style.display = 'block';
+            }
+        };
+
+        // Initial render
+        renderDashboard(currentData);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            renderDashboard(currentData);
+        });
+    </script>
+</body>
+</html>

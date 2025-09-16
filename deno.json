@@ -2,6 +2,10 @@
   "imports": {
     "@libsql/client": "npm:@libsql/client@^0.15.14",
     "@opentelemetry/api": "npm:@opentelemetry/api@^1.9.0",
+    "@std/cli": "jsr:@std/cli@^1.0.22",
+    "@std/fs": "jsr:@std/fs@^1.0.19",
+    "@std/path": "jsr:@std/path@^1.1.2",
+    "@swc/core": "npm:@swc/core@^1.13.5",
     "@tursodatabase/serverless": "npm:@tursodatabase/serverless@^0.1.3",
     "hono": "jsr:@hono/hono@^4.9.4",
     "libsql": "npm:libsql@0.5.17"
@@ -33,6 +37,14 @@
     "test": {
       "description": "Run tests (Hiện tại chưa thể setup test thành công)",
       "command": "APP_ENV=test deno test --allow-all --env-file=envs/.env --no-check"
+    },
+    "unstable_tailor_files": {
+      "description": "Thu thập kích thước các file",
+      "command": "./build/joplin-tailor --input-file './unstable_tailor_result/input.json' --output-file './unstable_tailor_result/output.json'"
+    },
+    "unstable_minify": {
+      "description": "Minify các file trong thu mục public",
+      "command": "deno run -P=minify build/minify.ts --src=public --out=dist --pattern='**/*.js' --sourcemap --suffix=.min --skipMinified"
     }
   },
   "nodeModulesDir": "auto",
@@ -42,5 +54,16 @@
     "jsxImportSource": "hono/jsx",
     "lib": ["deno.worker", "esnext"]
   },
-  "unstable": ["raw-imports", "temporal"]
+  "unstable": ["raw-imports", "temporal"],
+  "fmt": {
+    "spaceSurroundingProperties": false
+  },
+  "permissions": {
+    "minify": {
+      "read": true,
+      "write": true,
+      "env": true,
+      "ffi": true
+    }
+  }
 }

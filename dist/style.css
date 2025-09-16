@@ -1,0 +1,48 @@
+.loader {
+  width: 400px;
+  height: auto;
+}
+
+.week-challenge {
+  background: rgba(0, 0, 0, 0.2);
+  .body {
+    display: flex;
+    gap: 16px;
+  }
+  .box {
+    display: flex;
+    flex-direction: column;
+    width: 80px;
+    gap: 4px;
+    .day {
+      font-size: 16px;
+    }
+    .chỉ-thị-màu {
+      background: green;
+      width: 64px;
+      aspect-ratio: 1 / 1;
+      border-radius: 50px;
+    }
+    .added-words {
+      color: #fff;
+      font-size: 12px;
+    }
+  }
+}
+
+.box {
+  .header {
+    text-align: center;
+    font-size: 20px;
+    line-height: 2.4;
+    color: #fff;
+  }
+  .chỉ-thị-màu {
+    aspect-ratio: 1 / 1;
+    border-radius: 50px;
+    position: absolute;
+    display: flex;
+    overflow: hidden;
+  }
+}
+

@@ -29,6 +29,12 @@ try {
 const app = new Hono({ strict: true });
 app.use(trimTrailingSlash());
 
+// Handle sourcemap files
+app.use('*.map', async (c, next) => {
+  await next();
+  c.header('Content-Type', 'application/json');
+});
+
 // Handle chart.html with ETag caching
 app.get('/chart.html', async (c) => {
   try {
@@ -51,7 +57,7 @@ app.get('/chart.html', async (c) => {
     }
     
     // ETag does not match, sending full response
-    const content = await Deno.readFile('./public/chart.html');
+    const content = await Deno.readFile('./dist/chart.html');
     return new Response(content, {
       headers: {
         'content-type': 'text/html',
@@ -66,7 +72,7 @@ app.get('/chart.html', async (c) => {
   }
 });
 
-app.use("/*", serveStatic({ root: "./public" }));
+app.use("/*", serveStatic({ root: "./dist" }));
 
 app.use(
   "/ui/*",
