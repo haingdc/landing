@@ -1,4 +1,5 @@
 import { Hono } from "hono"
+import { upgradeWebSocket } from 'hono/deno'
 import { metrics } from "@opentelemetry/api"
 import { trimTrailingSlash } from "hono/trailing-slash"
 import { serveStatic } from "hono/deno"
@@ -57,7 +58,7 @@ app.get('/chart.html', async (c) => {
     }
     
     // ETag does not match, sending full response
-    const content = await Deno.readFile('./dist/chart.html');
+    const content = await Deno.readFile('./public/chart.html');
     return new Response(content, {
       headers: {
         'content-type': 'text/html',
@@ -72,7 +73,7 @@ app.get('/chart.html', async (c) => {
   }
 });
 
-app.use("/*", serveStatic({ root: "./dist" }));
+app.use("/*", serveStatic({ root: "./public" }));
 
 app.use(
   "/ui/*",
@@ -179,14 +180,23 @@ app.get("/api/weeklyprogress", async (c) => {
   }
 })
 
-app.get("/sync", async (c) => {
-  try {
-    await db.sync();
-    return c.json({ status: "success" });
-  } catch (err) {
-    console.log("sync error", err);
-    return c.text("Internal Server Error", 500);
-  }
-});
+app.get(
+  '/ws',
+  upgradeWebSocket(() => {
+    return {
+      onMessage: (event, ws) => {
+        if (event.data === "ping") {
+          ws.send("pong");
+        }
+      },
+      onOpen: () => {
+        console.log("A Client just joined!")
+      },
+      onClose: () => {
+        console.log("Disconnected")
+      }
+    }
+  })
+)
 
 Deno.serve(app.fetch);

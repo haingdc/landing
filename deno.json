@@ -56,7 +56,8 @@
   },
   "unstable": ["raw-imports", "temporal"],
   "fmt": {
-    "spaceSurroundingProperties": false
+    "spaceSurroundingProperties": false,
+    "semiColons": false
   },
   "permissions": {
     "minify": {

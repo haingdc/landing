@@ -53,7 +53,7 @@ app.get('/chart.html', async (c) => {
     }
     
     // ETag does not match, sending full response
-    const content = await Deno.readFile('./dist/chart.html');
+    const content = await Deno.readFile('./public/chart.html');
     return new Response(content, {
       headers: {
         'content-type': 'text/html',
@@ -68,7 +68,7 @@ app.get('/chart.html', async (c) => {
   }
 });
 
-app.use("/*", serveStatic({ root: "./dist" }));
+app.use("/*", serveStatic({ root: "./public" }));
 
 app.use(
   "/ui/*",
