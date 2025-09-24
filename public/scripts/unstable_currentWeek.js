@@ -91,7 +91,6 @@ function currentWeekChart(svg, dayRecords) {
     const barY = y(d.value);
     const barW = x.bandwidth();
     const barH = chartHeight - barY;
-    console.log({ barX, barY, barW, barH, ratioDailyTarget: d.ratioDailyTarget })
     const { light, saturation, hue } = getColor(d.ratioDailyTarget);
 
     // mặt trước (màu nhạt)

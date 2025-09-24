@@ -47,7 +47,8 @@
     }
 
     .current-week-container {
-      grid-column: 1 / 2;
+      /* grid-column: 1 / 2; */
+      position: absolute;
 
       .content {
         border: 1px solid var(--round-color);
@@ -84,8 +85,10 @@
         border-bottom: 1px solid #6b1211;
       }
 
-      thead {
+      thead tr {
         background-color: var(--background-color);
+        border-top-left-radius: var(--round);
+        border-top-right-radius: var(--round);
       }
 
       th {
@@ -106,6 +109,11 @@
         background-color: hsl(194.7, 93.1%, 60.4%);
         color: hsl(204.9, 98.1%, 41.4%);
       }
+
+      tbody tr:last-child {
+          border-bottom-left-radius: var(--round);
+          border-bottom-right-radius: var(--round);
+      }      
     }
   </style>
   <link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico" />
@@ -144,6 +152,24 @@
       "Thứ hai", "Thứ ba", "Thứ tư",
       "Thứ năm", "Thứ sáu", "Thứ bảy", "Chủ nhật"
     ];
+    const propKeys = ['tuan', 'soLuongTu', 'avgNgay', 'soNgayViet']
+    const columnWidths = ['40%', '20%', '20%', '20%']
+
+    const headers = [
+      {
+        title: 'Tuần', key: 'tuan', width: '40%'
+      },
+      {
+        title: 'Số lượng từ', key: 'soLuongTu', width: '20%'
+      },
+      {
+        title: 'Avg/ngày', key: 'avgNgay', width: '20%'
+      },
+      {
+        title: 'Số lượng ngày viết trong tuần', key: 'soNgayViet', width: '20%'
+      }
+    ]
+
     // === generic spring physics
     // 4ms/step for the spring animation's step. Typically 4 steps for 60fps (16.6ms/frame) and 2 for 120fps (8.3ms/frame). Frame time delta varies, so not always true
     // could use 8ms instead, but 120fps' 8.3ms/frame means the computation might not fit in the remaining 0.3ms, which means sometime the simulation step wouldn't even run once, giving the illusion of jank
@@ -374,17 +400,49 @@
             boxes2DSizeX.push(sizeX)
             boxes2DSizeY.push(sizeY)
             rowMaxSizeY = Math.max(rowMaxSizeY, sizeY)
+            if ( i % cols === cols - 1 || i === data.length - 1) { // last 
+            // box of row or last box ever
+              rowsTop.push(rowsTop.at(-1) + rowMaxSizeY + boxesGapY)
+              rowMaxSizeY = 0
+            }
           } else if (d.$$type === 'current-week-container') {
             const sizeX = Math.min(d.naturalSizeX, boxMaxSizeX)
             const sizeY = sizeX / d.ar + titleSizeY
             boxes2DSizeX.push(sizeX)
             boxes2DSizeY.push(sizeY)
             rowMaxSizeY = Math.max(rowMaxSizeY, sizeY)
+            if ( i % cols === cols - 1 || i === data.length - 1) { // last 
+            // box of row or last box ever
+              rowsTop.push(rowsTop.at(-1) + rowMaxSizeY + boxesGapY)
+              rowMaxSizeY = 0
+            }
+          } else if (d.$$type === 'weekly-progress-row') {
+            const sizeX =  (boxMaxSizeX + boxesGapX) * cols - boxesGapX // full width
+            const sizeY = 45
+            boxes2DSizeX.push(sizeX)
+            boxes2DSizeY.push(sizeY)
+            rowMaxSizeY = Math.max(rowMaxSizeY, sizeY)
+            if ( i % cols === cols - 1 || i === data.length - 1) { // last 
+            // box of row or last box ever
+              rowsTop.push(rowsTop.at(-1) + rowMaxSizeY /*+ boxesGapY*/) // no gap between rows in table
+              rowMaxSizeY = 0
+            }
+          } else if (d.$$type === 'weekly-progress-row-header') {
+            const sizeX =  (boxMaxSizeX + boxesGapX) * cols - boxesGapX // full width
+            const sizeY = 45
+            boxes2DSizeX.push(sizeX)
+            boxes2DSizeY.push(sizeY)
+            rowMaxSizeY = Math.max(rowMaxSizeY, sizeY)
+            if ( i % cols === cols - 1 || i === data.length - 1) { // last 
+            // box of row or last box ever
+              rowsTop.push(rowsTop.at(-1) + rowMaxSizeY /*+ boxesGapY*/) // no gap between rows in table
+              rowMaxSizeY = 0
+            }
+          } else {
+            throw new Error("upsupported $$type: ", d.$$type)
           }
-          if ( i % cols === cols - 1 || i === data.length - 1) { // last 
-          // box of row or last box ever
-            rowsTop.push(rowsTop.at(-1) + rowMaxSizeY + boxesGapY)
-            rowMaxSizeY = 0
+          if (i === data.length - 1) {
+            rowsTop.push(rowsTop.at(-1) + windowPaddingTop)
           }
         }
       }
@@ -415,6 +473,30 @@
             const currentRow = Math.floor(i / cols)
             const rowMaxSizeY = rowsTop[currentRow + 1] - boxesGapY - rowsTop[currentRow] // this is res-
             // toring the rowMaxSizeY info above, kinda weird
+            d.sizeX.dest = sizeX
+            d.sizeY.dest = sizeY
+            // Not like the original of Chenglou's Gallery, We align center center but instead top left
+            d.x.dest = boxesGapY + (boxMaxSizeX + boxesGapX) * (i % cols) /* + (boxMaxSizeX - sizeX) / 2 // center horizontally */
+            d.y.dest = rowsTop[currentRow] /* + (rowMaxSizeY - sizeY) / 2 */
+            d.scale.dest = 1
+            d.fxFactor.dest = 1
+          }  else if (d.$$type === 'weekly-progress-row') {
+            const sizeX = boxes2DSizeX[i], sizeY  = boxes2DSizeY[i]
+            const currentRow = Math.floor(i / cols)
+            const rowMaxSizeY = rowsTop[currentRow + 1] - boxesGapY - rowsTop[currentRow] // this is restoring
+            // the rowMaxSizeY info above, kind weird
+            d.sizeX.dest = sizeX
+            d.sizeY.dest = sizeY
+            // Not like the original of Chenglou's Gallery, We align center center but instead top left
+            d.x.dest = boxesGapY + (boxMaxSizeX + boxesGapX) * (i % cols) /* + (boxMaxSizeX - sizeX) / 2 // center horizontally */
+            d.y.dest = rowsTop[currentRow] /* + (rowMaxSizeY - sizeY) / 2 */
+            d.scale.dest = 1
+            d.fxFactor.dest = 1
+          } else if (d.$$type === 'weekly-progress-row-header') {
+            const sizeX = boxes2DSizeX[i], sizeY  = boxes2DSizeY[i]
+            const currentRow = Math.floor(i / cols)
+            const rowMaxSizeY = rowsTop[currentRow + 1] - boxesGapY - rowsTop[currentRow] // this is restoring
+            // the rowMaxSizeY info above, kind weird
             d.sizeX.dest = sizeX
             d.sizeY.dest = sizeY
             // Not like the original of Chenglou's Gallery, We align center center but instead top left
@@ -497,39 +579,123 @@
         = 150 // browsers UI like Safari are translucent. Random conservative numbers
       for (let i=0; i < data.length; i++) {
         let d = data[i]
-        let {node} = d
-        if ( // occlusion culling, aka only draw what's visible on screen
-          // (aka "virtualization")
-          !occlusionCulling ||
-          d.y.pos - /*toGlobal*/adjustedScrollTop <= windowSizeY + browserUIMaxSizeBottom &&
-          d.y.pos + d.sizeY.pos - /*toGlobal*/ adjustedScrollTop >= -browserUIMaxSizeTop &&
-          d.x.pos <= newWindowSizeX &&
-          d.x.pos + d.sizeX.pos >= 0) { // disregard shadow & sca-
-            // ling for you; browserUIMaxSizeBottom and browserUIMaxSize-
-            // Top are safe bigger values anyway
-            node.style.width = `${d.sizeX.pos}px`
-            node.style.height = `${d.sizeY.pos}px`
-            node.style.transform = `translate3d(${d.x.pos}px, ${d.y.pos}px, 0) scale(${d.scale.pos})` // safari now
-            // anti-aliases for hover, but then zoom in in janks on displays...
-            // we can't afford fxFactor & blur for all pics;
-            // too expensive for Safari & Chrome. E.g. when zoom-
-            // -ing out of a photo, keep scrolling; Chrome stops
-            // render on Studio Display
-            node.style.filter = newFocused != null && i === newFocused - 1
-              || i === newFocused || i === newFocused + 1
-              ? `brightness(${d.fxFactor.pos * 100}%)
-                 blur(${Math.max(0.6 - d.fxFactor.pos * 6)}px)` // blur these 3 only
-              : `brightness(${d.fxFactor.pos * 100}%)` // blur of unrel-
-              // ated pics is too fast during transition from/to 1D
-              // mode to be seen anyway
-            if (debug) node.style.outline = i === newAnchor
-              ? '2px solid rgba(255, 255, 0, 0.8)' : 'none'
-            if (i === newFocused) {} else {} // let it empty
-            if (node.parentNode == null) {
-              document.body.appendChild(node) // if previous absent , add
+        if (d.$$type === 'weekly-progress-row') { // for table rows with $$type = 'weekly-prgress-row'
+          let {node, rootNode} = d
+          if ( // occlusion culling, aka only draw what's visible on screen
+            // (aka "virtualization")
+            !occlusionCulling ||
+            d.y.pos - /*toGlobal*/adjustedScrollTop <= windowSizeY + browserUIMaxSizeBottom &&
+            d.y.pos + d.sizeY.pos - /*toGlobal*/ adjustedScrollTop >= -browserUIMaxSizeTop &&
+            d.x.pos <= newWindowSizeX &&
+            d.x.pos + d.sizeX.pos >= 0) { // disregard shadow & sca-
+              // ling for you; browserUIMaxSizeBottom and browserUIMaxSize-
+              // Top are safe bigger values anyway
+              node.style.width = `${d.sizeX.pos}px`
+              node.style.height = `${d.sizeY.pos}px`
+              node.style.transform = `translate3d(${d.x.pos}px, ${d.y.pos}px, 0) scale(${d.scale.pos})` // safari now
+              // anti-aliases for hover, but then zoom in in janks on displays...
+              // we can't afford fxFactor & blur for all pics;
+              // too expensive for Safari & Chrome. E.g. when zoom-
+              // -ing out of a photo, keep scrolling; Chrome stops
+              // render on Studio Display
+              node.style.filter = newFocused != null && i === newFocused - 1
+                || i === newFocused || i === newFocused + 1
+                ? `brightness(${d.fxFactor.pos * 100}%)
+                  blur(${Math.max(0.6 - d.fxFactor.pos * 6)}px)` // blur these 3 only
+                : `brightness(${d.fxFactor.pos * 100}%)` // blur of unrel-
+                // ated pics is too fast during transition from/to 1D
+                // mode to be seen anyway
+              if (debug) node.style.outline = i === newAnchor
+                ? '2px solid rgba(255, 255, 0, 0.8)' : 'none'
+              if (i === newFocused) {} else {} // let it empty
+              if (node.parentNode == null) {
+                rootNode.children[1].appendChild(node) // if previous absent , add
+                if (rootNode.parentNode == null) {
+                  document.body.appendChild(rootNode)
+                }
+              }
+          } else if(node.parentNode != null){
+            node.parentNode.removeChild(node) // if previously present , remove
+            if (rootNode.children[1].length === 0 && rootNode.parentNode != null) {
+              document.body.removeChild(rootNode)
             }
-        } else if(node.parentNode != null){
-          document.body.removeChild(node) // if previously present , remove
+          }
+        } else if (d.$$type === 'weekly-progress-row-header') { // for table rows with $$type = 'weekly-prgress-row'
+          let {node, rootNode} = d
+          if ( // occlusion culling, aka only draw what's visible on screen
+            // (aka "virtualization")
+            !occlusionCulling ||
+            d.y.pos - /*toGlobal*/adjustedScrollTop <= windowSizeY + browserUIMaxSizeBottom &&
+            d.y.pos + d.sizeY.pos - /*toGlobal*/ adjustedScrollTop >= -browserUIMaxSizeTop &&
+            d.x.pos <= newWindowSizeX &&
+            d.x.pos + d.sizeX.pos >= 0) { // disregard shadow & sca-
+              // ling for you; browserUIMaxSizeBottom and browserUIMaxSize-
+              // Top are safe bigger values anyway
+              node.style.width = `${d.sizeX.pos}px`
+              node.style.height = `${d.sizeY.pos}px`
+              node.style.transform = `translate3d(${d.x.pos}px, ${d.y.pos}px, 0) scale(${d.scale.pos})` // safari now
+              // anti-aliases for hover, but then zoom in in janks on displays...
+              // we can't afford fxFactor & blur for all pics;
+              // too expensive for Safari & Chrome. E.g. when zoom-
+              // -ing out of a photo, keep scrolling; Chrome stops
+              // render on Studio Display
+              node.style.filter = newFocused != null && i === newFocused - 1
+                || i === newFocused || i === newFocused + 1
+                ? `brightness(${d.fxFactor.pos * 100}%)
+                  blur(${Math.max(0.6 - d.fxFactor.pos * 6)}px)` // blur these 3 only
+                : `brightness(${d.fxFactor.pos * 100}%)` // blur of unrel-
+                // ated pics is too fast during transition from/to 1D
+                // mode to be seen anyway
+              if (debug) node.style.outline = i === newAnchor
+                ? '2px solid rgba(255, 255, 0, 0.8)' : 'none'
+              if (i === newFocused) {} else {} // let it empty
+              if (node.parentNode == null) {
+                rootNode.children[0].appendChild(node) // if previous absent , add
+                if (rootNode.parentNode == null) {
+                  document.body.appendChild(rootNode)
+                }
+              }
+          } else if(node.parentNode != null){
+            node.parentNode.removeChild(node) // if previously present , remove
+            if (rootNode.children[0].length === 0 && rootNode.parentNode != null) {
+              document.body.removeChild(rootNode)
+            }
+          }
+        } else { // for any other $$type
+          let {node} = d
+          if ( // occlusion culling, aka only draw what's visible on screen
+            // (aka "virtualization")
+            !occlusionCulling ||
+            d.y.pos - /*toGlobal*/adjustedScrollTop <= windowSizeY + browserUIMaxSizeBottom &&
+            d.y.pos + d.sizeY.pos - /*toGlobal*/ adjustedScrollTop >= -browserUIMaxSizeTop &&
+            d.x.pos <= newWindowSizeX &&
+            d.x.pos + d.sizeX.pos >= 0) { // disregard shadow & sca-
+              // ling for you; browserUIMaxSizeBottom and browserUIMaxSize-
+              // Top are safe bigger values anyway
+              node.style.width = `${d.sizeX.pos}px`
+              node.style.height = `${d.sizeY.pos}px`
+              node.style.transform = `translate3d(${d.x.pos}px, ${d.y.pos}px, 0) scale(${d.scale.pos})` // safari now
+              // anti-aliases for hover, but then zoom in in janks on displays...
+              // we can't afford fxFactor & blur for all pics;
+              // too expensive for Safari & Chrome. E.g. when zoom-
+              // -ing out of a photo, keep scrolling; Chrome stops
+              // render on Studio Display
+              node.style.filter = newFocused != null && i === newFocused - 1
+                || i === newFocused || i === newFocused + 1
+                ? `brightness(${d.fxFactor.pos * 100}%)
+                  blur(${Math.max(0.6 - d.fxFactor.pos * 6)}px)` // blur these 3 only
+                : `brightness(${d.fxFactor.pos * 100}%)` // blur of unrel-
+                // ated pics is too fast during transition from/to 1D
+                // mode to be seen anyway
+              if (debug) node.style.outline = i === newAnchor
+                ? '2px solid rgba(255, 255, 0, 0.8)' : 'none'
+              if (i === newFocused) {} else {} // let it empty
+              if (node.parentNode == null) {
+                document.body.appendChild(node) // if previous absent , add
+              }
+          } else if(node.parentNode != null){
+            document.body.removeChild(node) // if previously present , remove
+          }
         }
       }
       document.body.style.cursor = cursor
@@ -568,6 +734,7 @@
     try {
       const params = new URLSearchParams({ listType })
       const fetchPromise = fetch(`./api/dayrecord?${params.toString()}`)
+      const weeklyProgressPromise = fetch(`./api/weeklyprogress`)
 //    const state = await unstable_delaySpin(fetchPromise, { delay: 100 })
       const state = 'show_the_spin'
       if (state === 'show_the_spin') {
@@ -605,6 +772,7 @@
                 node.setAttribute('width', String(sizeX))
                 node.setAttribute('height', String(sizeY))
                 node.src = '/img/fallback.jpeg'
+                node.style.position = 'absolute'
             
             let mySpring = perceptualToSpring(.4, .3)
             return {
@@ -669,14 +837,139 @@
             }
           })[0]
         }
-        data.push(dailyChartItem)
-        await delay(1000)
         const response = await fetchPromise
         const dayRecords = await response.json()
-        currentWeekChart(d3.select('svg'), dayRecords)
+        currentWeekChart(d3.select(dailyChartItem.node.childNodes[1].childNodes[0]/* SVG element */), dayRecords)
+        data.push(dailyChartItem)
+        const weeklyProgressResponse = await weeklyProgressPromise
+        const weeklyProgress = await weeklyProgressResponse.json()
+        {
+          const windowSizeX = document.documentElement.clientWidth
+          const windowSizeY = document.documentElement.clientHeight
+          const { cols , boxMaxSizeX} = colsBoxMaxSizeXF(windowSizeX)
+          let weeklyProgressData = []
+          for (const week of weeklyProgress) {
+            weeklyProgressData.push({
+              tuan: formatDateRange(week.week_start, week.week_end),
+              soLuongTu: week.total_net_words_a_week,
+              avgNgay: week.avg_daily_net_words_a_week_so_far,
+              soNgayViet: week.writing_days
+            })
+          }
+          let rootNode; 
+          if (weeklyProgressData.length) {
+            rootNode = document.createElement('table') 
+            rootNode.className = 'weekly-progress-table'
+            let thead = document.createElement('thead')
+                thead.style.position = 'absolute'
+/*          let tr = document.createElement('tr')
+                tr.style.display = 'flex'
+            let ths = []
+            for (let i = 0; i < headers.length; i++) {
+              const header = headers[i]
+              const th = document.createElement('th')
+                    th.textContent = header.title
+                    th.style.display = 'flex'
+                    th.style.width = header.width
+                    ths.push(th)
+            }
+            tr.append(...ths)
+            thead.append(tr)
+*/
+            let tbody = document.createElement('tbody')
+            rootNode.append(thead, tbody)
+          }
+
+          let thead = document.createElement('thead')
+              thead.style.positin = 'absolute'
+          const trHeader = [{
+            $$type: 'weekly-progress-row-header',
+            w: '100%',
+            h: 45,
+            id: 'weekly-progress-header',
+          }].map((d, i) => {
+            const ar = null
+            const sizeX = Math.min(boxMaxSizeX)
+            const sizeY = 45
+            let node = document.createElement('tr') 
+                node.style.position = 'absolute'
+                node.style.display = 'flex'
+            let ths = []
+            for (let i = 0; i < headers.length; i++) {
+              const header = headers[i]
+              const th = document.createElement('th')
+                    th.textContent = header.title
+                    th.style.display = 'flex'
+                    th.style.width = header.width
+                    ths.push(th)
+            }
+            node.append(...ths)
+            return {
+              $$type: d.$$type,
+              id: d.id,
+              naturalSizeX: d.w,
+              ar, // aspect ratio
+              sizeX: spring(sizeX),
+              sizeY: spring(sizeY),
+              x: spring(Math.floor(i / cols) * -windowSizeX -windowSizeX),
+              y: spring(windowSizeY + Math.floor(i / cols) * sizeY),
+              scale: spring(1),
+              fxFactor: spring(20),
+              node,
+              rootNode
+            }
+          })[0]
+          data.push(trHeader)
+          weeklyProgressData = weeklyProgressData.map((d, i) => {
+            return {
+              id: 'weekly-progress-' + i,
+              w: '100%',
+              h: 45,
+              $$type: 'weekly-progress-row',
+            }
+          }).map((d, i) => {
+            if (!Number.isInteger(d.w)) {
+              const ar = null
+              const sizeX = Math.min(boxMaxSizeX)
+              const sizeY = 45 // hardcode
+
+
+              let node = document.createElement('tr')
+                  node.className = "weekly-progress-row"
+                  node.style.position = 'absolute'
+                  node.style.display = 'flex'
+              let tds = []
+              for (let j = 0; j < headers.length; j++) {
+                const header = headers[j]
+                const td = document.createElement('td')
+                      td.textContent = weeklyProgressData[i][header.key]
+                      td.style.width = header.width
+                      td.style.display = 'flex'
+                tds.push(td)
+              }
+              node.append(...tds)
+
+              return {
+                $$type: d.$$type,
+                id: d.id,
+                naturalSizeX: d.w,
+                ar, // aspect ratio
+                sizeX: spring(sizeX),
+                sizeY: spring(sizeY),
+                x: spring(Math.floor(i / cols) * -windowSizeX -windowSizeX),
+                y: spring(windowSizeY + Math.floor(i / cols) * sizeY),
+                scale: spring(1),
+                fxFactor: spring(20),
+                node,
+                rootNode
+              }
+            }
+          })
+          data.push(...weeklyProgressData)
+        }
       }
     } catch(error) {
-      console.error('error')
+      console.error('error', error)
     }
 
     
