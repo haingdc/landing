@@ -5,20 +5,30 @@ import getColor from './getColor.js'
 
 // === Constants
 const targetWordsDaily = 300
-const weekdays = [
+const weekdaysLong = [
   "Thứ hai", "Thứ ba", "Thứ tư",
   "Thứ năm", "Thứ sáu", "Thứ bảy", "Chủ nhật"
 ];
+const weekdaysShort = [
+  "T2", "T3", "T4",
+  "T5", "T6", "T7", "CN"
+];
 
-function getDateName(dateStr) {
+function getDateName(dateStr, weekdays) {
   const date = Temporal.PlainDate.from(dateStr);
   const dayName = weekdays[date.dayOfWeek /* range 1-7*/ - 1];
   return dayName
 }
 
-function currentWeekChart(svg, dayRecords) {
+function currentWeekChart(
+  svg,
+  dayRecords,
+  { containerWidth, containerHeight}
+) {
+  const isMobile = containerWidth && containerWidth < 500
   const newData = [null, null, null, null, null, null, null] // 7 days a week
   let today = Temporal.Now.plainDateISO('Asia/Ho_Chi_Minh');
+  const weekdays = isMobile ? weekdaysShort : weekdaysLong
   for (let i = 0; i < dayRecords.length && i < 7; i++) {
     const d = dayRecords[i]
     const { dayOfWeek } = Temporal.PlainDate.from(d.date)
@@ -29,7 +39,7 @@ function currentWeekChart(svg, dayRecords) {
       w: 400,
       h: 400,
       prompt: d.net_words_change,
-      header: getDateName(d.date),
+      header: getDateName(d.date, weekdays),
       ratioDailyTarget,
       value: d.net_words_change
     }
@@ -49,9 +59,12 @@ function currentWeekChart(svg, dayRecords) {
       }
     }
   }
-  const width = +svg.attr("width");
-  const height = +svg.attr("height");
-  const margin = { top: 40, right: 30, bottom: 50, left: 60 };
+  let width = +svg.attr("width")
+  let height = +svg.attr("height")
+  const margin = { top: 40, right: 30, bottom: 50, left: 60 }
+  console.log({ containerWidth, containerHeight})
+  width = containerWidth ?? width
+  height = containerHeight ?? height
 
   const chartWidth = width - margin.left - margin.right;
   const chartHeight = height - margin.top - margin.bottom;
@@ -83,7 +96,7 @@ function currentWeekChart(svg, dayRecords) {
     .style('color', 'white');
 
   // offset giả lập 3D
-  const dx = 12, dy = 12;
+  const dx = isMobile ? 6 : 12, dy = isMobile ? 6 : 12;
 
   // vẽ từng cột
   newData.forEach(d => {

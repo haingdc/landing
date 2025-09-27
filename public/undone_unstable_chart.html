@@ -52,8 +52,6 @@
 
       .content {
         border: 1px solid var(--round-color);
-        width: 700px;
-        height: 400px;
         border-radius: var(--round);
       }
 
@@ -210,7 +208,7 @@
 
     function colsBoxMaxSizeXF(containerSizeX) {
       const boxMinSizeX = 700 // Make sure that on mobile, this min width is big enough not to show 2 images per row. Also, this won't be respected if view's tiny
-      const cols = clamp(1, Math.floor((containerSizeX - boxesGapX) / (boxMinSizeX + boxesGapX)), 7) // half of boxesGapX for container's left and right gap
+      const cols = clamp(1, Math.floor((containerSizeX - boxesGapX) / (boxMinSizeX + boxesGapX)), 1) // half of boxesGapX for container's left and right gap
       const boxMaxSizeX = (containerSizeX - boxesGapX - cols * boxesGapX) / cols
       return {cols, boxMaxSizeX}
     }
@@ -330,7 +328,6 @@
     }
 
     function render(now) {
-//    console.group('render')
       // === step 0: process events
       // keydown
       const inputCode = events.keydown == null ? null : events.keydown.code
@@ -551,7 +548,6 @@
 
 
       // === step 4: run animation
-//    console.group('step 4')
       let newAnimatedUntilTime = animatedUntilTime ?? now
       const steps = Math.floor((now - newAnimatedUntilTime) / msPerAnimationStep) // run X spring steps. Decouple physics
       // simulation from framerate!
@@ -571,8 +567,6 @@
         })
       }
       globalThis.stillAnimating = stillAnimating // for debugging
-//    console.log('stillAnimating', stillAnimating, steps)
-//    console.groupEnd()
 
       // === step 5: render. Batch DOM writes
       const browserUIMaxSizeTop = 100, browserUIMaxSizeBottom
@@ -725,7 +719,6 @@
       windowSizeX = newWindowSizeX
       scrollY = adjustedScrollTop
 
-//    console.groupEnd()
       return stillAnimating
     }
 
@@ -817,8 +810,6 @@
             let content = document.createElement('div')
                 content.className = "content"
             let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-                svg.setAttribute('width', String(d.w))
-                svg.setAttribute('height', String(d.h))
             content.appendChild(svg)
             node.append(header, content)
             return {
@@ -839,8 +830,28 @@
         }
         const response = await fetchPromise
         const dayRecords = await response.json()
-        currentWeekChart(d3.select(dailyChartItem.node.childNodes[1].childNodes[0]/* SVG element */), dayRecords)
+        const resizeObserver = new ResizeObserver((entries) => {
+          for (let entry of entries) {
+            // We use the basic solution for drawing svg, which is simply clear
+            // and redraw. Although we can optimize by other ways if we have ti-
+            // me to think about the chart and contemplate other solutions
+            const svg = dailyChartItem.node.childNodes[1].childNodes[0] /*SVG element*/
+                  svg.setAttribute('width', String(entry.contentRect.width))
+                  svg.setAttribute('height', String(entry.contentRect.height - titleSizeY))
+            d3.select(svg).selectAll('*').remove() // clear previous
+            currentWeekChart(
+              d3.select(svg),
+              dayRecords,
+              {
+                containerWidth: entry.contentRect.width,
+                containerHeight: entry.contentRect.height - titleSizeY
+              }
+            )
+          }
+        })
+        resizeObserver.observe(dailyChartItem.node)
         data.push(dailyChartItem)
+        scheduleRender()
         const weeklyProgressResponse = await weeklyProgressPromise
         const weeklyProgress = await weeklyProgressResponse.json()
         {
@@ -862,20 +873,6 @@
             rootNode.className = 'weekly-progress-table'
             let thead = document.createElement('thead')
                 thead.style.position = 'absolute'
-/*          let tr = document.createElement('tr')
-                tr.style.display = 'flex'
-            let ths = []
-            for (let i = 0; i < headers.length; i++) {
-              const header = headers[i]
-              const th = document.createElement('th')
-                    th.textContent = header.title
-                    th.style.display = 'flex'
-                    th.style.width = header.width
-                    ths.push(th)
-            }
-            tr.append(...ths)
-            thead.append(tr)
-*/
             let tbody = document.createElement('tbody')
             rootNode.append(thead, tbody)
           }
@@ -966,6 +963,7 @@
             }
           })
           data.push(...weeklyProgressData)
+          scheduleRender()
         }
       }
     } catch(error) {
