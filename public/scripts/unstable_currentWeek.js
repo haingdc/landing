@@ -90,8 +90,11 @@ function currentWeekChart(
     .attr('class', 'x-axis')
     .style('color', 'white');
 
+  // Điều chỉnh số lượng ticks cho trục y dựa trên kích thước màn hình
+  const yAxisTicks = isMobile ? 4 : 6;
+  
   g.append("g")
-    .call(d3.axisLeft(y).tickFormat(d => `${d} từ`))
+    .call(d3.axisLeft(y).ticks(yAxisTicks).tickFormat(d => `${d} từ`))
     .attr('class', 'y-axis')
     .style('color', 'white');
 

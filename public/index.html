@@ -164,7 +164,7 @@
         title: 'Avg/ngày', key: 'avgNgay', width: '20%'
       },
       {
-        title: 'Số lượng ngày viết trong tuần', key: 'soNgayViet', width: '20%'
+        title: 'Số ngày viết trong tuần', key: 'soNgayViet', width: '20%'
       }
     ]
 
@@ -201,6 +201,7 @@
 
     // === constant layout metrics.
     const titleSizeY = 52
+    const titleSizeYMobile = 102
     const sectionGapY = 28
     const boxesGapX = 24, boxesGapY = 24
     const windowPaddingTop = 40
@@ -382,6 +383,7 @@
       let newFocused = focused
       // === step 3: calculate new layout & cursor
       const { cols , boxMaxSizeX} = colsBoxMaxSizeXF(newWindowSizeX)
+      const isMobile = newWindowSizeX < 500
       let boxes2DSizeX = [],
           boxes2DSizeY = [],
           rowsTop = [windowPaddingTop] // length : number of rows + 1
@@ -403,8 +405,9 @@
               rowMaxSizeY = 0
             }
           } else if (d.$$type === 'current-week-container') {
+            const newTitleSizeY = isMobile ? titleSizeYMobile : titleSizeY
             const sizeX = Math.min(d.naturalSizeX, boxMaxSizeX)
-            const sizeY = sizeX / d.ar + titleSizeY
+            const sizeY = sizeX / d.ar + newTitleSizeY
             boxes2DSizeX.push(sizeX)
             boxes2DSizeY.push(sizeY)
             rowMaxSizeY = Math.max(rowMaxSizeY, sizeY)
@@ -415,7 +418,7 @@
             }
           } else if (d.$$type === 'weekly-progress-row') {
             const sizeX =  (boxMaxSizeX + boxesGapX) * cols - boxesGapX // full width
-            const sizeY = 45
+            const sizeY = isMobile ? 80 : 45
             boxes2DSizeX.push(sizeX)
             boxes2DSizeY.push(sizeY)
             rowMaxSizeY = Math.max(rowMaxSizeY, sizeY)
@@ -426,7 +429,7 @@
             }
           } else if (d.$$type === 'weekly-progress-row-header') {
             const sizeX =  (boxMaxSizeX + boxesGapX) * cols - boxesGapX // full width
-            const sizeY = 45
+            const sizeY = isMobile ? 120 : 45
             boxes2DSizeX.push(sizeX)
             boxes2DSizeY.push(sizeY)
             rowMaxSizeY = Math.max(rowMaxSizeY, sizeY)
@@ -831,20 +834,23 @@
         const response = await fetchPromise
         const dayRecords = await response.json()
         const resizeObserver = new ResizeObserver((entries) => {
+          const windowSizeX = document.documentElement.clientWidth
+          const isMobile = windowSizeX < 500
+          const newTitleSizeY = isMobile ? titleSizeYMobile : titleSizeY
           for (let entry of entries) {
             // We use the basic solution for drawing svg, which is simply clear
             // and redraw. Although we can optimize by other ways if we have ti-
             // me to think about the chart and contemplate other solutions
             const svg = dailyChartItem.node.childNodes[1].childNodes[0] /*SVG element*/
                   svg.setAttribute('width', String(entry.contentRect.width))
-                  svg.setAttribute('height', String(entry.contentRect.height - titleSizeY))
+                  svg.setAttribute('height', String(entry.contentRect.height - newTitleSizeY))
             d3.select(svg).selectAll('*').remove() // clear previous
             currentWeekChart(
               d3.select(svg),
               dayRecords,
               {
                 containerWidth: entry.contentRect.width,
-                containerHeight: entry.contentRect.height - titleSizeY
+                containerHeight: entry.contentRect.height - newTitleSizeY
               }
             )
           }
