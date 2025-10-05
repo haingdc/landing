@@ -102,8 +102,11 @@ app.get("/api/dayrecord", async (c) => {
   console.log('Fetching records from', startDayStr, 'to', endDayStr);
   try {
     const rs = await db.execute({
-      sql:
-        "SELECT * FROM DailyProgress WHERE date >= ? AND date <= ? ORDER BY date ASC",
+      sql: `
+        SELECT * FROM DailyProgress
+        WHERE date >= ? AND date <= ?
+        ORDER BY date ASC
+      `,
       args: [startDayStr, endDayStr],
     });
     return c.json(rs.rows);
@@ -168,6 +171,12 @@ app.get("/api/weeklyprogress", async (c) => {
     console.log("weeklyprogress error", error);
     return c.text("Internal Server Error", 500);
   }
+})
+
+app.post("/api/sync/dayrecord", async (c) => {
+  const dayrecord = await c.req.json()
+  console.log(`nhan duoc dayrecord ${JSON.stringify(dayrecord)}`)
+  return c.text("ok")
 })
 
 Deno.serve(app.fetch);

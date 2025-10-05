@@ -3,9 +3,9 @@ services:
   lgtm:
     image: docker.io/grafana/otel-lgtm:0.8.1
     ports:
-      - '3000:3000' # Grafana
-      - '4317:4317' # OTLP gRPC
-      - '4318:4318' # OTLP HTTP
+      - "3002:3000"   # Grafana (khác với 3001)
+      - "4321:4317"   # OTLP gRPC (khác với 4319)
+      - "4322:4318"   # OTLP HTTP (khác với 4320)
     volumes:
       - ./lgtm/grafana:/data/grafana
       - ./lgtm/prometheus:/data/prometheus

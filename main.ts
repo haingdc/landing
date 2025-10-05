@@ -110,8 +110,11 @@ app.get("/api/dayrecord", async (c) => {
   console.log('Fetching records from', startDayStr, 'to', endDayStr);
   try {
     const rs = await db.execute({
-      sql:
-        "SELECT * FROM DailyProgress WHERE date >= ? AND date <= ? ORDER BY date ASC",
+      sql: `
+        SELECT * FROM DailyProgress
+        WHERE date >= ? AND date <= ?
+        ORDER BY date ASC
+      `,
       args: [startDayStr, endDayStr],
     });
     const rsCount = await db.execute({ sql: "SELECT COUNT(*) FROM DailyProgress", args: [] })
@@ -198,5 +201,11 @@ app.get(
     }
   })
 )
+
+app.post("/api/sync/dayrecord", async (c) => {
+  const dayrecord = await c.req.json()
+  console.log(`nhan duoc dayrecord ${JSON.stringify(dayrecord)}`)
+  return c.text("ok")
+})
 
 Deno.serve(app.fetch);
