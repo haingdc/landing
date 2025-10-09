@@ -14,7 +14,7 @@
     "dev:otel": {
       "dependencies": ["otel:docker"],
       "description": "Start the application with OpenTelemetry enabled",
-      "command": "OTEL_DENO=true OTEL_SERVICE_NAME=Viet-300-words deno run --watch --allow-net --allow-env --env-file=envs/.env --allow-ffi --allow-read main.ts"
+      "command": "OTEL_DENO=true OTEL_SERVICE_NAME=Viet-300-words deno run --watch --allow-net --allow-env --env-file=envs/.env --allow-ffi --allow-read --allow-write=./database/development/deno-kv-storehouse/main.db main.ts"
     },
     "dev:otel:serverless": {
       "dependencies": ["otel:docker"],
@@ -54,7 +54,7 @@
     "jsxImportSource": "hono/jsx",
     "lib": ["deno.worker", "esnext"]
   },
-  "unstable": ["raw-imports", "temporal"],
+  "unstable": ["raw-imports", "temporal", "kv"],
   "fmt": {
     "spaceSurroundingProperties": false,
     "semiColons": false

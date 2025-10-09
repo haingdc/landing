@@ -5,6 +5,9 @@ import { trimTrailingSlash } from "hono/trailing-slash"
 import { serveStatic } from "hono/deno"
 import { createClient, type Client } from "@libsql/client"
 import { getTime, md5 } from "./server/util.ts"
+import { streamSSE } from 'hono/streaming'
+
+const kv = await Deno.openKv('./database/development/deno-kv-storehouse/main.db');
 
 const debug = false;
 
@@ -118,7 +121,6 @@ app.get("/api/dayrecord", async (c) => {
       args: [startDayStr, endDayStr],
     });
     const rsCount = await db.execute({ sql: "SELECT COUNT(*) FROM DailyProgress", args: [] })
-    console.log("Total count of records:", rsCount.rows);
     return c.json(rs.rows);
   } catch (_err) {
     console.log("DB error", _err);
@@ -204,8 +206,36 @@ app.get(
 
 app.post("/api/sync/dayrecord", async (c) => {
   const dayrecord = await c.req.json()
-  console.log(`nhan duoc dayrecord ${JSON.stringify(dayrecord)}`)
+  await kv.set(["experiment", "dayrecord"], dayrecord);
+//console.log(`nhan duoc dayrecord ${JSON.stringify(dayrecord)}`)
   return c.text("ok")
+})
+
+app.get("/api/events", async (c) => {
+  const res = await kv.get(["experiment", "dayrecord"]);
+  if (res.value) {
+    return c.json(res.value);
+  } else {
+    return c.text("no data", 404);
+  }
+})
+
+
+let id = 0
+
+app.get('/sse', async (c) => {
+  return streamSSE(c, async (stream) => {
+    while (true) {
+      const res = await kv.get(["experiment", "dayrecord"]);
+      const message = res.value ? JSON.stringify(res.value) : 'no data';
+      await stream.writeSSE({
+        data: message,
+        event: 'time-update',
+        id: String(id++),
+      })
+      await stream.sleep(3000)
+    }
+  })
 })
 
 Deno.serve(app.fetch);

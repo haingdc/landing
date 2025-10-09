@@ -2,8 +2,11 @@ import { Hono } from "hono";
 import { metrics } from "@opentelemetry/api";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import { serveStatic } from "hono/deno";
-import { createClient, type Client } from "https://esm.sh/@libsql/client@0.6.0/web";
+import { createClient, type Client } from "@libsql/client"
 import { getTime, md5 } from "./server/util.ts";
+import { streamSSE } from 'hono/streaming'
+
+const kv = await Deno.openKv();
 
 const meter = metrics.getMeter("Viet-300-words", "1.0.0");
 // Create some metrics
@@ -175,8 +178,25 @@ app.get("/api/weeklyprogress", async (c) => {
 
 app.post("/api/sync/dayrecord", async (c) => {
   const dayrecord = await c.req.json()
-  console.log(`nhan duoc dayrecord ${JSON.stringify(dayrecord)}`)
+  await kv.set(["experiment", "dayrecord"], dayrecord);
   return c.text("ok")
+})
+
+let id = 0
+
+app.get('/sse', async (c) => {
+  return streamSSE(c, async (stream) => {
+    while (true) {
+      const res = await kv.get(["experiment", "dayrecord"]);
+      const message = res.value ? JSON.stringify(res.value) : 'no data';
+      await stream.writeSSE({
+        data: message,
+        event: 'time-update',
+        id: String(id++),
+      })
+      await stream.sleep(3000)
+    }
+  })
 })
 
 Deno.serve(app.fetch);

@@ -62,7 +62,6 @@ function currentWeekChart(
   let width = +svg.attr("width")
   let height = +svg.attr("height")
   const margin = { top: 40, right: 30, bottom: 50, left: 60 }
-  console.log({ containerWidth, containerHeight})
   width = containerWidth ?? width
   height = containerHeight ?? height
 
