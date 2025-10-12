@@ -7,9 +7,12 @@ import { createClient, type Client } from "@libsql/client"
 import { getTime, md5 } from "./server/util.ts"
 import { streamSSE } from 'hono/streaming'
 
+// constants
+const streamingKey = ["experiment", "streaming"];
+const debug = false;
+
 const kv = await Deno.openKv('./database/development/deno-kv-storehouse/main.db');
 
-const debug = false;
 
 const meter = metrics.getMeter("Viet-300-words", "1.0.0");
 // Create some metrics
@@ -110,7 +113,6 @@ app.get("/api/dayrecord", async (c) => {
   const startDayStr = startDay.toString(); // YYYY-MM-DD format
   const endDayStr = endDay.toString(); // YYYY-MM-DD format
 
-  console.log('Fetching records from', startDayStr, 'to', endDayStr);
   try {
     const rs = await db.execute({
       sql: `
@@ -189,9 +191,11 @@ app.get(
   '/ws',
   upgradeWebSocket(() => {
     return {
-      onMessage: (event, ws) => {
-        if (event.data === "ping") {
-          ws.send("pong");
+      onMessage: (event) => {
+        if (event.data === "streaming") {
+          kv.set(streamingKey, "streaming");
+        } else if (event.data === "stopped") {
+          kv.set(streamingKey, "stopped");
         }
       },
       onOpen: () => {
@@ -199,6 +203,7 @@ app.get(
       },
       onClose: () => {
         console.log("Disconnected")
+        kv.set(streamingKey, "stopped");
       }
     }
   })
@@ -223,6 +228,11 @@ app.get("/api/events", async (c) => {
 
 let id = 0
 
+/**
+ * @deprecated
+ * api SSE is deprecated, thay thế bằng api/landing/dayrecord
+ * This endpoint helps to push updates to browser every 3 seconds
+ */
 app.get('/sse', async (c) => {
   return streamSSE(c, async (stream) => {
     while (true) {
@@ -236,6 +246,54 @@ app.get('/sse', async (c) => {
       await stream.sleep(3000)
     }
   })
+})
+
+/**
+ * Cập nhật dayrecord cho trang landing page realtime
+ */
+app.get("/api/landing/dayrecord", async (c) => {
+  return streamSSE(c, async (stream) => {
+    while (true) {
+      const res = await kv.get(["experiment", "dayrecord"]);
+      const message = res.value ? JSON.stringify(res.value) : 'no data';
+      await stream.writeSSE({
+        data: message,
+        event: 'time-update',
+        id: String(id++),
+      })
+      await stream.sleep(3000)
+    }
+  })
+})
+
+/**
+ * Cập nhật trạng thái streaming cho trang landing theo realtime
+ */
+app.get("/api/v2/landing/streaming/sse", (c) => {
+  return streamSSE(c, async (stream) => {
+    for await (const [entry] of kv.watch([streamingKey])) {
+      await stream.writeSSE({
+        data: JSON.stringify({ streamingStatus: entry.value ?? "stopped" }),
+        event: "streaming-status",
+      })
+    }
+  })
+})
+
+app.get("/api/landing/stream/test/get", async (c) => {
+  const res = await kv.get(streamingKey);
+  const streamingStatus = res.value !== undefined ? res.value : "stopped";
+  return c.json({ streamingStatus });
+})
+
+app.get("/api/landing/stream/test/set", async (c) => {
+  await kv.set(streamingKey, "streaming");
+  return c.text("set to streaming");
+})
+
+app.get("/api/landing/stream/test/set-stop", async (c) => {
+  await kv.set(streamingKey, "stopped");
+  return c.text("set to stopped");
 })
 
 Deno.serve(app.fetch);

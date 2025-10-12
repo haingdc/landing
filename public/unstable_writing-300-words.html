@@ -15,6 +15,18 @@
   </script>
   <title>Landing</title>
   <style>
+    :root {
+      --color-red-400: #fe717e;
+      --color-red-600: #e11d36;
+      --animate-ping: ping 1s cubic-bezier(0, 0, .2, 1) infinite;
+    }
+    @keyframes ping {
+      75%,
+      100% {
+        opacity: 0;
+        transform: scale(2);
+      }
+    }
     html {
       /* inline background noise. No network request & failure & white flash at page load */
       background-image: url(data:image/png;base64,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);
@@ -111,7 +123,27 @@
       tbody tr:last-child {
           border-bottom-left-radius: var(--round);
           border-bottom-right-radius: var(--round);
-      }      
+      }
+    }
+    .streaming-sign {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      transition: transform 0.2s ease-out;
+      color: #fff;
+    }
+    .animate-ping {
+      animation: var(--animate-ping);
+    }
+    .fill-red-400 {
+      fill: var(--color-red-400);
+    }
+
+    .fill-red-600 {
+      fill: var(--color-red-600);
+    }
+    .origin-center {
+      transform-origin: center;
     }
   </style>
   <link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico" />
@@ -119,7 +151,14 @@
 </head>
 
 <body>
-  
+  <!-- <div class="streaming-sign">
+    <svg class="me-1.5 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+      viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="6" class="fill-red-400 animate-ping origin-center"></circle>
+      <circle cx="12" cy="12" r="6" class="fill-red-600"></circle>
+    </svg>
+    Streaming
+  </div>  -->
   <script type="module">
     /// <reference lib="dom" />
     import * as d3 from "d3";
@@ -977,9 +1016,10 @@
       console.error('error', error)
     }
 
-    const realTime = localStorage.getItem('sse') === 'true'
+    const realTime = (localStorage.getItem('sse') ?? 'true') === 'true'
+    console.log({ realTime })
     if (realTime && typeof(EventSource) !== "undefined") {
-      const source = new EventSource("/sse");
+      const source = new EventSource("/api/landing/dayrecord");
       source.addEventListener('time-update', function(event) {
         try {
           if (!isHandleStream) return
@@ -991,7 +1031,6 @@
             width: rect.width,
             height: rect.height
           })
-          console.log('dayRecord', dayRecords)
         } catch(e) {
           console.error(e)
         }
@@ -1010,6 +1049,56 @@
       };
     } else {
       console.log("Server-Sent Events not supported by browser");
+    }
+
+    if (realTime && typeof (EventSource) !== "undefined") {
+      const source = new EventSource("/api/v2/landing/streaming/sse")
+      source.addEventListener("streaming-status", function (event) {
+        console.log('status /api/landing/streaming/sse:', event.data)
+        const streamingStatus = JSON.parse(event.data).streamingStatus
+        if (!isHandleStream) return
+
+        if (streamingStatus === "streaming") {
+          let streamingContainer = document.querySelector('.streaming-sign')
+          if (!streamingContainer) {
+            streamingContainer = document.createElement('div')
+            streamingContainer.className = "streaming-sign"
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+                  svg.setAttribute("width", 24)
+                  svg.setAttribute("height", 24)
+                  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+                  svg.setAttribute("fill", "currentColor")
+                  svg.setAttribute("viewBox", "0 0 24 24")
+            const circle1 = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+                  circle1.setAttribute("cx", 12)
+                  circle1.setAttribute("cy", 12)
+                  circle1.setAttribute("r", 6)
+                  circle1.setAttribute("class", "fill-red-400 animate-ping origin-center")
+            const circle2 = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+                  circle2.setAttribute("cx", 12)
+                  circle2.setAttribute("cy", 12)
+                  circle2.setAttribute("r", 6)
+                  circle2.setAttribute("class", "fill-red-600")
+            const textNode = document.createTextNode("Typing...")
+                  svg.append(circle1, circle2)
+                  streamingContainer.append(svg, textNode)
+            document.body.appendChild(streamingContainer)
+          }
+        } else {
+          const streamingContainer = document.querySelector('.streaming-sign')
+          if (streamingContainer) {
+            document.body.removeChild(streamingContainer)
+          }
+        }
+      })
+
+      source.onopen = function() {
+        console.log("Connection /api/landing/streaming/sse opened")
+      }
+
+      source.onerror = function() {
+        console.log("Error or connection closed on /api/landing/streaming/sse")
+      }
     }
 
   </script>
